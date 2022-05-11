@@ -1,0 +1,69 @@
+@startuml
+!theme plain
+!include <logos/mariadb>
+!include <logos/grafana>
+!include <logos/prometheus>
+!include <awslib/AWSSimplified>
+
+<style>
+componentDiagram {
+  BackGroundColor white
+  LineThickness 1
+  LineColor #333333
+}
+document {
+  BackGroundColor white
+}
+</style>
+
+' skinparam monochrome true
+skinparam defaulttextalignment center
+
+skinparam sequence {
+    ArrowColor #333333
+}
+
+skinparam rectangle {
+    RoundCorner<< round20 >> 20
+    RoundCorner<< round30 >> 30
+    RoundCorner<< round40 >> 40
+    RoundCorner<< round50 >> 50
+}
+
+actor "User" as user
+
+interface "Grafana UI" as grafanaui
+
+rectangle "Podman" as podman {
+database "<$mariadb>\n//(grafana database)//" as mariadb #f5d0c4
+
+rectangle "**cAdvisor**" as cadvisor #d4e0b6
+
+rectangle "<$grafana>\n**Grafana**\n//(UI to view the logs)//" as grafana #d4e0b6
+rectangle "<$prometheus>\n**Prometheus**" as prometheus #d4e0b6
+
+rectangle "**Source**\n**primary**\n//(a source of the primary events)//" as sourceprimary <<round20>> #8abded
+rectangle "**Source**\n**secondary**\n//(a source of the secondary events)//" as sourcesecondary <<round20>> #8abded
+rectangle "**Source**\n**tertiary**\n//(a source of the tertiary events)//" as sourcetertiary <<round20>> #8abded
+}
+
+grafana -left-> mariadb
+grafana <-left- mariadb
+
+grafanaui -down-> grafana
+grafanaui <-down- grafana
+
+user --right--> grafanaui
+user <--right-- grafanaui
+
+podman -down-> cadvisor
+grafana -down-> cadvisor
+mariadb -down-> cadvisor
+prometheus -down-> cadvisor
+sourceprimary -up-> cadvisor
+sourcesecondary -up-> cadvisor
+sourcetertiary -up-> cadvisor
+cadvisor -> prometheus
+prometheus -> grafana
+
+@enduml

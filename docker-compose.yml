@@ -1,0 +1,110 @@
+version: "3.9"
+
+services:
+  mariadb:
+    image: mariadb:latest
+    container_name: ${BASE_NAME}-mariadb
+    labels:
+      service.name: "mariadb"
+    environment:
+      - "MYSQL_ROOT_PASSWORD=password"
+      - "MYSQL_ROOT_HOST=%"
+      - "MYSQL_DATABASE=grafana"
+    volumes:
+      - "mariadb-data:/var/lib/mysql"
+    restart: always
+
+  grafana:
+    build:
+      context: .
+      dockerfile: grafana/Dockerfile
+    image: ${IMAGE_BASE_NAME}-grafana:latest
+    #image: grafana/grafana:latest
+    container_name: ${BASE_NAME}-grafana
+    labels:
+      service.name: "grafana"
+    depends_on:
+      - mariadb
+    environment:
+      - "MYSQL_HOST=${BASE_NAME}-mariadb"
+      - "MYSQL_PORT=3306"
+      - "MYSQL_USERNAME=root"
+      - "MYSQL_PASSWORD=password"
+      - "MYSQL_NAME=grafana"
+    ports:
+      - "3000:3000"
+
+  cadvisor:
+    build:
+      context: tmp/google/cadvisor-creatone-podman
+      dockerfile: ../../../cadvisor/Dockerfile
+    image: ${IMAGE_BASE_NAME}-cadvisor:latest
+    container_name: ${BASE_NAME}-cadvisor
+    labels:
+      service.name: "cadvisor"
+    #depends_on:
+    #environment:
+    volumes:
+      - "/etc/machine-id:/etc/machine-id:ro"
+      - "/sys:/sys:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
+      - "/dev/disk:/dev/disk:ro"
+      - "/:/rootfs:ro"
+      - "/run/podman/podman.sock:/run/podman/podman.sock:rw"
+    devices:
+      - "/dev/kmsg"
+    security_opt:
+      - "label=disable"
+    command: -enable_metrics=app,cpu,cpuLoad,cpuset,disk,memory,network,oom_event,percpu,perf_event,process,resctrl,sched -v=100 -store_container_labels=false -docker_only=true -housekeeping_interval=30s -podman="unix:///run/podman/podman.sock"
+    privileged: true
+    #pid: host
+
+  prometheus:
+    build:
+      context: .
+      dockerfile: prometheus/Dockerfile
+    image: ${IMAGE_BASE_NAME}-prometheus:latest
+    container_name: ${BASE_NAME}-prometheus
+    labels:
+      service.name: "prometheus"
+
+  ping-primary:
+    build:
+      context: .
+      dockerfile: ping/Dockerfile
+    image: ${IMAGE_BASE_NAME}-ping:latest
+    container_name: ${BASE_NAME}-ping-primary
+    labels:
+      service.name: "ping-primary"
+    environment:
+      - "NAME=ping-primary"
+
+  ping-secondary:
+    build:
+      context: .
+      dockerfile: ping/Dockerfile
+    image: ${IMAGE_BASE_NAME}-ping:latest
+    container_name: ${BASE_NAME}-ping-secondary
+    labels:
+      service.name: "ping-secondary"
+    environment:
+      - "NAME=ping-secondary"
+
+  ping-tertiary:
+    build:
+      context: .
+      dockerfile: ping/Dockerfile
+    image: ${IMAGE_BASE_NAME}-ping:latest
+    container_name: ${BASE_NAME}-ping-tertiary
+    labels:
+      service.name: "ping-tertiary"
+    environment:
+      - "NAME=ping-tertiary"
+
+volumes:
+  mariadb-data:
+
+networks:
+  default:
+    name: ${NETWORK}
