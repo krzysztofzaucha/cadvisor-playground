@@ -42,8 +42,6 @@ services:
     container_name: ${BASE_NAME}-cadvisor
     labels:
       service.name: "cadvisor"
-    #depends_on:
-    #environment:
     volumes:
       - "/etc/machine-id:/etc/machine-id:ro"
       - "/sys:/sys:ro"
@@ -58,7 +56,6 @@ services:
       - "label=disable"
     command: -enable_metrics=app,cpu,cpuLoad,cpuset,disk,memory,network,oom_event,percpu,perf_event,process,resctrl,sched -v=100 -store_container_labels=false -docker_only=true -housekeeping_interval=30s -podman="unix:///run/podman/podman.sock"
     privileged: true
-    #pid: host
 
   prometheus:
     build:
