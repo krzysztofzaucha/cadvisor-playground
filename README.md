@@ -15,5 +15,5 @@ To run this example **Podman** installation is required.
 
 ## Instructions
 
-- Run `make up to start up this example.
+- Run `make up` to start up this example (run `make` to see full list of options).
 - Observe metrics on the **Grafana** dashboard.
