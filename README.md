@@ -1,4 +1,4 @@
-# cAdvisor Sandbox
+# cAdvisor Playground
 
 This repository contains a basic **cAdvisor** configuration example.
 
